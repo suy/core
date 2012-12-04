@@ -568,9 +568,6 @@ $(document).ready(function(){
 	// 'show password' checkbox
 	$('#pass2').showPassword();
 
-	//use infield labels
-	$("label.infield").inFieldLabels();
-
 	var checkShowCredentials = function() {
 		var empty = false;
 		$('input#user, input#password').each(function() {

@@ -1,7 +1,9 @@
 <!--[if IE 8]><style>input[type="checkbox"]{padding:0;}</style><![endif]-->
 <form method="post">
 	<fieldset>
-		<?php if(!empty($_['redirect'])) { echo '<input type="hidden" name="redirect_url" value="'.$_['redirect'].'" />'; } ?>
+		<?php if(!empty($_['redirect'])): ?>
+		<input type="hidden" name="redirect_url" value="'.$_['redirect'].'" />
+		<?php endif; ?>
 		<ul>
 		<?php if(isset($_['invalidcookie']) && ($_['invalidcookie'])): ?>
 			<li class="errors">
@@ -16,15 +18,27 @@
 			</li></a>
 		<?php endif; ?>
 		</ul>
-		<p class="infield">
-			<label for="user" class="infield"><?php echo $l->t( 'Username' ); ?></label>
-			<input type="text" name="user" id="user" value="<?php echo $_['username']; ?>"<?php echo $_['user_autofocus']?' autofocus':''; ?> autocomplete="on" required />
+		<p>
+			<input type="text" name="user" id="user"
+				placeholder="<?php echo $l->t( 'Username' ); ?>"
+				value="<?php echo $_['username']; ?>"
+				autocomplete="on"
+				required
+				<?php echo $_['user_autofocus']?' autofocus':''; ?>
+			/>
 		</p>
-		<p class="infield">
-			<label for="password" class="infield"><?php echo $l->t( 'Password' ); ?></label>
-			<input type="password" name="password" id="password" value="" required<?php echo $_['user_autofocus']?'':' autofocus'; ?> />
+		
+		<p>
+			<input type="password" name="password" id="password"
+				placeholder="<?php echo $l->t( 'Password' ); ?>"
+				required
+				<?php echo $_['user_autofocus']?'':' autofocus'; ?>
+			/>
 		</p>
-		<input type="checkbox" name="remember_login" value="1" id="remember_login" /><label for="remember_login"><?php echo $l->t('remember'); ?></label>
+		
+		<input type="checkbox" name="remember_login" id="remember_login" value="1" />
+		<label for="remember_login"><?php echo $l->t('remember'); ?></label>
+		
 		<input type="submit" id="submit" class="login" value="<?php echo $l->t( 'Log in' ); ?>" />
 	</fieldset>
 </form>
