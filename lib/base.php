@@ -269,7 +269,9 @@ class OC
         OC_Util::addScript("oc-dialogs");
         OC_Util::addScript("js");
         OC_Util::addScript("eventsource");
-        OC_Util::addScript("config");
+		OC_Util::addScript("config");
+		OC_Util::addScript("turbolinks");
+		OC_Util::addScript("jquery.turbolinks");
         //OC_Util::addScript( "multiselect" );
         OC_Util::addScript('search', 'result');
         OC_Util::addScript('router');

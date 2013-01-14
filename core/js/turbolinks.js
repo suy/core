@@ -353,5 +353,3 @@ this.Turbolinks = {
   visit: visit
 };
 
-Run
-Link 
