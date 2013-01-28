@@ -55,7 +55,7 @@ abstract class Test_FileStorage extends PHPUnit_Framework_TestCase {
 
 		$dh = $this->instance->opendir('/');
 		$content = array();
-		while ($file = $this->instance->readdir($dh)) {
+		while ($file = readdir($dh)) {
 			if ($file != '.' and $file != '..') {
 				$content[] = $file;
 			}
@@ -240,13 +240,26 @@ abstract class Test_FileStorage extends PHPUnit_Framework_TestCase {
 
         $dh = $storage->opendir('');
         $filesInDir = array();
-        while (($filename = $storage->readdir($dh)) !== false) {
+        while (($filename = readdir($dh)) !== false) {
             $filesInDir[]= $filename;
         }
 
+        // are the files recognized correctly?
         $this->assertContains('££Ö€ßœĚęĘĞĜΣΥΦΩΫΫ.txt', $filesInDir);
         $this->assertContains('undaçao.doc', $filesInDir);
         $this->assertContains('öäüß.txt', $filesInDir);
         $this->assertContains('中文blah中文blah.txt', $filesInDir);
+
+        // some function tests
+        foreach($filesInDir as $f) {
+            if ($f === '.' || $f === '..') {
+                continue;
+            }
+            $this->assertTrue($storage->file_exists($f), 'does not exist '.$f);
+            $this->assertTrue($storage->filesize($f) > 0, 'unknown file size '.$f);
+            $this->assertTrue($storage->file_get_contents($f) !== false, 'cannot get file contents '.$f);
+            $this->assertTrue($storage->isReadable($f), 'not readable '.$f);
+            $this->assertTrue($storage->isUpdatable($f), 'not writable '.$f);
+        }
     }
 }
