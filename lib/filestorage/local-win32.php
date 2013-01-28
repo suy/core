@@ -4,50 +4,50 @@
  */
 class OC_Filestorage_Local extends OC_Filestorage_Common {
 	protected $datadir;
-    private $FS;
+	private $FS;
 
-    public function __construct($arguments) {
-        $this->FS = new COM('Scripting.FileSystemObject', null, CP_UTF8);
+	public function __construct($arguments) {
+		$this->FS = new COM('Scripting.FileSystemObject', null, CP_UTF8);
 		$this->datadir=$arguments['datadir'];
 		if(substr($this->datadir, -1)!=='/') {
 			$this->datadir.='/';
 		}
 	}
 	public function mkdir($path) {
-        try {
-            $this->FS->CreateFolder($this->buildPath($path));
-        } catch (com_exception $e) {
-            return false;
-        }
-        return true;
+		try {
+			$this->FS->CreateFolder($this->buildPath($path));
+		} catch (com_exception $e) {
+			return false;
+		}
+		return true;
 	}
 	public function rmdir($path) {
-        try {
-            $this->FS->DeleteFolder($this->buildPath($path));
-        } catch (com_exception $e) {
-            return false;
-        }
-        return true;
+		try {
+			$this->FS->DeleteFolder($this->buildPath($path));
+		} catch (com_exception $e) {
+			return false;
+		}
+		return true;
 	}
 	public function opendir($path) {
-        $files = array('.', '..');
-        try {
-            $dir = $this->FS->getFolder($this->buildPath($path));
+		$files = array('.', '..');
+		try {
+			$dir = $this->FS->getFolder($this->buildPath($path));
 
-            foreach ($dir->SubFolders() as $v) {
-                $files[] = $v->Name;
-            }
-            foreach ($dir->Files as $v) {
-                $files[] = $v->Name;
-            }
-        }
-        catch (\Exception $e) {
-            $files = array();
-        }
+			foreach ($dir->SubFolders() as $v) {
+				$files[] = $v->Name;
+			}
+			foreach ($dir->Files as $v) {
+				$files[] = $v->Name;
+			}
+		}
+		catch (\Exception $e) {
+			$files = array();
+		}
 
-        OC_FakeDirStream::$dirs['local-win32'.$path] = $files;
-        return opendir('fakedir://local-win32'.$path);
-    }
+		OC_FakeDirStream::$dirs['local-win32'.$path] = $files;
+		return opendir('fakedir://local-win32'.$path);
+	}
 	public function is_dir($path) {
 		if(substr($path, -1)=='/') {
 			$path=substr($path, 0, -1);
@@ -58,11 +58,11 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 		return is_file($this->buildPath($path));
 	}
 	public function stat($path) {
-		$fullPath = $this->buildPath($path);
+		$fullPath = $this->shortPath($path);
 		$statResult = stat($fullPath);
 
 		if ($statResult['size'] < 0) {
-            $f = $this->FS->GetFile($fullPath);
+			$f = $this->FS->GetFile($fullPath);
 
 			$statResult['size'] = $f->Size;
 			$statResult[7] = $f->Size;
@@ -70,7 +70,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 		return $statResult;
 	}
 	public function filetype($path) {
-		$filetype=filetype($this->buildPath($path));
+		$filetype=filetype($this->shortPath($path));
 		if($filetype=='link') {
 			$filetype=filetype(realpath($this->buildPath($path)));
 		}
@@ -80,48 +80,95 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 		if($this->is_dir($path)) {
 			return 0;
 		}else{
-			$fullPath = $this->buildPath($path);
-            $f = $this->FS->GetFile($fullPath);
+			$fullPath = $this->shortPath($path);
+			$f = $this->FS->GetFile($fullPath);
 
-            return $f->Size;
+			return $f->Size;
 		}
 	}
 	public function isReadable($path) {
-		return is_readable($this->buildPath($path));
+		//
+		// we cannot use php's is_readable because some files don't work
+		//
+		$path = $this->buildPath($path);
+
+		if ($this->FS->FileExists($path)) {
+			try {
+				//Constant 	Value 	Description
+				//ForReading 	1 	Open a file for reading only. You can't write to this file.
+				//ForAppending 	8 	Open a file and write to the end of the file.
+				$fileStream = $this->FS->OpenTextFile($path, 1);
+				$fileStream->Close();
+				return true;
+			}
+			catch (com_exception $e) {
+				return false;
+			}
+		}
+		if ($this->FS->FolderExists($path)) {
+			//
+			// TODO: test is we can enumerate the folder contents
+			//
+			return true;
+		}
+		return false;
 	}
+
 	public function isUpdatable($path) {
-		return is_writable($this->buildPath($path));
+		return is_writable($this->shortPath($path));
 	}
 	public function file_exists($path) {
-		return file_exists($this->buildPath($path));
+		return file_exists($this->shortPath($path));
 	}
 	public function filectime($path) {
-		return filectime($this->buildPath($path));
+		return filectime($this->shortPath($path));
 	}
 	public function filemtime($path) {
-		return filemtime($this->buildPath($path));
+		return filemtime($this->shortPath($path));
 	}
 	public function touch($path, $mtime=null) {
 		// sets the modification time of the file to the given value.
 		// If mtime is nil the current time is set.
 		// note that the access time of the file always changes to the current time.
 		if(!is_null($mtime)) {
-			$result=touch( $this->buildPath($path), $mtime );
+			$result=touch( $this->shortPath($path), $mtime );
 		}else{
-			$result=touch( $this->buildPath($path));
+			$result=touch( $this->shortPath($path));
 		}
 		if( $result ) {
-			clearstatcache( true, $this->buildPath($path) );
+			clearstatcache( true, $this->shortPath($path) );
 		}
 
 		return $result;
 	}
 	public function file_get_contents($path) {
-		return file_get_contents($this->buildPath($path));
+		$contents = file_get_contents($this->shortPath($path));
+		if ($contents === false) {
+			//
+			// TODO: add binary support using ADODB.Stream
+			//       http://www.motobit.com/tips/detpg_read-write-binary-files/
+			//
+			$fileStream = $this->FS->OpenTextFile($this->shortPath($path), 1);
+			$contents = $fileStream->ReadAll();
+			$fileStream->Close();
+		}
+		return $contents;
 	}
+
 	public function file_put_contents($path, $data) {//trigger_error("$path = ".var_export($path, 1));
-		return file_put_contents($this->buildPath($path), $data);
+		$result = file_put_contents($this->buildPath($path), $data);
+		if ($result === false) {
+			//
+			// TODO: add binary support using ADODB.Stream
+			//       http://www.motobit.com/tips/detpg_read-write-binary-files/
+			//
+			$fileStream = $this->FS->CreateTextFile ($this->shortPath($path), true, true);
+			$fileStream->Write($data);
+			$fileStream->Close();
+		}
+		return $result;
 	}
+
 	public function unlink($path) {
 		return $this->delTree($path);
 	}
@@ -150,22 +197,21 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 		return copy($this->buildPath($path1), $this->buildPath($path2));
 	}
 	public function fopen($path, $mode) {
-		if($return=fopen($this->buildPath($path), $mode)) {
-			switch($mode) {
-				case 'r':
-					break;
-				case 'r+':
-				case 'w+':
-				case 'x+':
-				case 'a+':
-					break;
-				case 'w':
-				case 'x':
-				case 'a':
-					break;
-			}
+		switch ($m = substr($mode, 0, 1))
+		{
+			case 'x': $mode[0] = 'w';
+			case 'w':
+			case 'a':
+				try {
+					$this->FS->CreateTextFile($this->buildPath($path), false)->Close();
+				} catch (com_exception $e) {
+					if ('x' === $m) {
+						return false;
+					}
+				}
 		}
-		return $return;
+
+		return fopen($this->shortPath($path), $mode);
 	}
 
 	public function getMimeType($path) {
@@ -180,11 +226,11 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 		$dirRelative=$dir;
 		$dir=$this->buildPath($dir);
 		if (!file_exists($dir)) {
-            return true;
-        }
+			return true;
+		}
 		if (!is_dir($dir) || is_link($dir)) {
-            return unlink($dir);
-        }
+			return unlink($dir);
+		}
 		foreach (scandir($dir) as $item) {
 			if ($item == '.' || $item == '..') continue;
 			if(is_file($dir.'/'.$item)) {
@@ -243,10 +289,29 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 		return $this->filemtime($path)>$time;
 	}
 
-    protected function buildPath($path) {
-        if(strpos($path, '/') === 0) {
-            $path = substr($path, 1);
-        }
-        return realpath($this->datadir) . DIRECTORY_SEPARATOR . $path;
-    }
+	protected function buildPath($path) {
+		if(strpos($path, '/') === 0) {
+			$path = substr($path, 1);
+		}
+		return realpath($this->datadir) . DIRECTORY_SEPARATOR . $path;
+	}
+
+	protected function shortPath($path){
+		$path = $this->buildPath($path);
+
+		try
+		{
+			if ($this->FS->FileExists($path)) {
+				return $this->FS->GetFile($path)->ShortPath;
+			}
+			if ($this->FS->FolderExists($path)) {
+				return $this->FS->GetFolder($path)->ShortPath;
+			}
+		}
+		catch (com_exception $e){
+
+		}
+
+		return $path;
+	}
 }
