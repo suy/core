@@ -681,4 +681,7 @@ class OC_Util {
 		return $data;
 	}
 
+    public static function runningOnWindows() {
+        return (substr(PHP_OS, 0, 3) === "WIN");
+    }
 }

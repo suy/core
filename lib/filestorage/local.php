@@ -3,7 +3,7 @@
  * for local filestore, we only have to map the paths
  */
 
-if(substr(PHP_OS, 0, 3) === "WIN") {
+if(\OC_Util::runningOnWindows()) {
     require_once 'local-win32.php';
 } else {
 
