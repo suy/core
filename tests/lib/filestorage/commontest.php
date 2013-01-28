@@ -26,10 +26,7 @@ class Test_Filestorage_CommonTest extends Test_FileStorage {
 	 */
 	private $tmpDir;
 	public function setUp() {
-		$this->tmpDir=get_temp_dir().'/filestoragecommon';
-		if(!file_exists($this->tmpDir)) {
-			mkdir($this->tmpDir);
-		}
+        $this->tmpDir=OC_Helper::tmpFolder();
 		$this->instance=new OC_Filestorage_CommonTest(array('datadir'=>$this->tmpDir));
 	}
 
