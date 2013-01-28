@@ -293,7 +293,13 @@ class OC_Util {
 			$errors[]=array('error'=>'PHP modules have been installed, but they are still listed as missing?<br/>', 'hint'=>'Please ask your server administrator to restart the web server.');
 		}
 
-		return $errors;
+        if(substr(PHP_OS, 0, 3) === "WIN") {
+            if (!class_exists('COM')) {
+                $errors[]=array('error'=>'COM support is not installed.<br/>', 'hint'=>'Please ask your server administrator to enable COM support (http://php.net/manual/en/com.installation.php).');
+            }
+        }
+
+        return $errors;
 	}
 
 	public static function displayLoginPage($errors = array()) {
