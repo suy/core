@@ -351,7 +351,9 @@ class OC
 	{
 		// register autoloader
 		spl_autoload_register(array('OC', 'autoload'));
-		setlocale(LC_ALL, 'en_US.UTF-8');
+		if (!OC_Util::runningOnWindows()) {
+			setlocale(LC_ALL, 'en_US.UTF-8');
+		}
 
 		// set some stuff
 		//ob_start();
@@ -502,9 +504,11 @@ class OC
 		}
 
 		// write error into log if locale can't be set
-		if (OC_Util::issetlocaleworking() == false) {
-			OC_Log::write('core', 'setting locate to en_US.UTF-8 failed. Support is probably not installed on your system', OC_Log::ERROR);
-		}
+        if (!OC_Util::runningOnWindows()) {
+            if (OC_Util::issetlocaleworking() == false) {
+                OC_Log::write('core', 'setting locate to en_US.UTF-8 failed. Support is probably not installed on your system', OC_Log::ERROR);
+            }
+        }
 		if (OC_Config::getValue('installed', false)) {
 			if (OC_Appconfig::getValue('core', 'backgroundjobs_mode', 'ajax') == 'ajax') {
 				OC_Util::addScript('backgroundjobs');
