@@ -2,7 +2,7 @@
 /**
  * for local filestore, we only have to map the paths
  */
-class OC_Filestorage_Local extends OC_Filestorage_Common{
+class OC_Filestorage_Local extends OC_Filestorage_Common {
 	protected $datadir;
     private $FS;
 
@@ -30,10 +30,23 @@ class OC_Filestorage_Local extends OC_Filestorage_Common{
         return true;
 	}
 	public function opendir($path) {
-        return new OC_Windows_Directory($this->buildPath($path), $this->FS);
-	}
-    public function readdir($dir) {
-        return $dir->read();
+        $files = array('.', '..');
+        try {
+            $dir = $this->FS->getFolder($this->buildPath($path));
+
+            foreach ($dir->SubFolders() as $v) {
+                $files[] = $v->Name;
+            }
+            foreach ($dir->Files as $v) {
+                $files[] = $v->Name;
+            }
+        }
+        catch (\Exception $e) {
+            $files = array();
+        }
+
+        OC_FakeDirStream::$dirs['local-win32'.$path] = $files;
+        return opendir('fakedir://local-win32'.$path);
     }
 	public function is_dir($path) {
 		if(substr($path, -1)=='/') {
@@ -166,8 +179,12 @@ class OC_Filestorage_Local extends OC_Filestorage_Common{
 	private function delTree($dir) {
 		$dirRelative=$dir;
 		$dir=$this->buildPath($dir);
-		if (!file_exists($dir)) return true;
-		if (!is_dir($dir) || is_link($dir)) return unlink($dir);
+		if (!file_exists($dir)) {
+            return true;
+        }
+		if (!is_dir($dir) || is_link($dir)) {
+            return unlink($dir);
+        }
 		foreach (scandir($dir) as $item) {
 			if ($item == '.' || $item == '..') continue;
 			if(is_file($dir.'/'.$item)) {
@@ -231,71 +248,5 @@ class OC_Filestorage_Local extends OC_Filestorage_Common{
             $path = substr($path, 1);
         }
         return realpath($this->datadir) . DIRECTORY_SEPARATOR . $path;
-    }
-}
-
-//str_replace('/', '\\', $this->datadir)
-
-class OC_Windows_Directory extends \Directory
-{
-    public $path, $handle, $fs;
-
-    protected $children = array();
-
-    function __construct($path, $fs)
-    {
-        $this->path = $path;
-        $this->handle = $this;
-        $this->fs = $fs;
-        $this->children = $this->listContent();
-
-        if (!$this->children)
-        {
-            $this->children = scandir($path);
-            $this->children || $this->children = array();
-        }
-    }
-
-    function read()
-    {
-        $c = each($this->children);
-        if ($c)
-            return $c['value'];
-        return false;
-//        return (list(, $c) = each($this->children)) ? $c : false;
-    }
-
-    function rewind()
-    {
-        reset($this->children);
-    }
-
-    function close()
-    {
-        unset($this->path, $this->handle, $this->children);
-    }
-
-    private function listContent() {
-        try
-        {
-            $f = array('.', '..');
-
-            $dir = $this->fs->getFolder($this->path);
-
-            foreach ($dir->SubFolders() as $v) {
-                $f[] = $v->Name;
-            }
-            foreach ($dir->Files as $v) {
-                $f[] = $v->Name;
-            }
-        }
-        catch (\Exception $f)
-        {
-            $f = array();
-        }
-
-        unset($dir);
-
-        return $f;
     }
 }
