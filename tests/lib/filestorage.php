@@ -55,7 +55,7 @@ abstract class Test_FileStorage extends PHPUnit_Framework_TestCase {
 
 		$dh = $this->instance->opendir('/');
 		$content = array();
-		while ($file = readdir($dh)) {
+		while ($file = $this->instance->readdir($dh)) {
 			if ($file != '.' and $file != '..') {
 				$content[] = $file;
 			}
@@ -88,6 +88,7 @@ abstract class Test_FileStorage extends PHPUnit_Framework_TestCase {
 
 		//fill a file with string data
 		$this->instance->file_put_contents('/lorem.txt', $sourceText);
+        $this->assertTrue($this->instance->file_exists('/lorem.txt'));
 		$this->assertFalse($this->instance->is_dir('/lorem.txt'));
 		$this->assertEquals($sourceText, $this->instance->file_get_contents('/lorem.txt'), 'data returned from file_get_contents is not equal to the source data');
 
@@ -231,4 +232,21 @@ abstract class Test_FileStorage extends PHPUnit_Framework_TestCase {
 		$content = stream_get_contents($fh);
 		$this->assertEquals(file_get_contents($textFile), $content);
 	}
+
+    public function testNonAsciiFileNames() {
+        $dir = OC::$SERVERROOT . '/tests/data/nonascii/';
+
+        $storage = new OC_Filestorage_Local( array( 'datadir' => $dir ));
+
+        $dh = $storage->opendir('');
+        $filesInDir = array();
+        while (($filename = $storage->readdir($dh)) !== false) {
+            $filesInDir[]= $filename;
+        }
+
+        $this->assertContains('££Ö€ßœĚęĘĞĜΣΥΦΩΫΫ.txt', $filesInDir);
+        $this->assertContains('undaçao.doc', $filesInDir);
+        $this->assertContains('öäüß.txt', $filesInDir);
+        $this->assertContains('中文blah中文blah.txt', $filesInDir);
+    }
 }
