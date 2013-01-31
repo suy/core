@@ -236,9 +236,9 @@ abstract class Storage extends \PHPUnit_Framework_TestCase {
 	}
 
     public function testNonAsciiFileNames() {
-        $dir = OC::$SERVERROOT . '/tests/data/nonascii/';
+        $dir = \OC::$SERVERROOT . '/tests/data/nonascii/';
 
-        $storage = new OC_Filestorage_Local( array( 'datadir' => $dir ));
+        $storage = new \OC\Files\Storage\Local( array( 'datadir' => $dir ));
 
         $dh = $storage->opendir('');
         $filesInDir = array();

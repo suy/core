@@ -2,21 +2,27 @@
 /**
  * for local filestore, we only have to map the paths
  */
-class OC_Filestorage_Local extends OC_Filestorage_Common {
+
+namespace OC\Files\Storage;
+
+class Local extends \OC\Files\Storage\Common {
 	protected $datadir;
 	private $FS;
 
 	public function __construct($arguments) {
-		$this->FS = new COM('Scripting.FileSystemObject', null, CP_UTF8);
+		$this->FS = new \COM('Scripting.FileSystemObject', null, \CP_UTF8);
 		$this->datadir=$arguments['datadir'];
 		if(substr($this->datadir, -1)!=='/') {
 			$this->datadir.='/';
 		}
 	}
+	public function getId(){
+		return 'local::'.$this->datadir;
+	}
 	public function mkdir($path) {
 		try {
 			$this->FS->CreateFolder($this->buildPath($path));
-		} catch (com_exception $e) {
+		} catch (\com_exception $e) {
 			return false;
 		}
 		return true;
@@ -24,7 +30,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 	public function rmdir($path) {
 		try {
 			$this->FS->DeleteFolder($this->buildPath($path));
-		} catch (com_exception $e) {
+		} catch (\com_exception $e) {
 			return false;
 		}
 		return true;
@@ -45,7 +51,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 			$files = array();
 		}
 
-		OC_FakeDirStream::$dirs['local-win32'.$path] = $files;
+		\OC\Files\Stream\Dir::register('local-win32'.$path, $files);
 		return opendir('fakedir://local-win32'.$path);
 	}
 	public function is_dir($path) {
@@ -101,7 +107,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 				$fileStream->Close();
 				return true;
 			}
-			catch (com_exception $e) {
+			catch (\com_exception $e) {
 				return false;
 			}
 		}
@@ -204,7 +210,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 			case 'a':
 				try {
 					$this->FS->CreateTextFile($this->buildPath($path), false)->Close();
-				} catch (com_exception $e) {
+				} catch (\com_exception $e) {
 					if ('x' === $m) {
 						return false;
 					}
@@ -216,7 +222,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 
 	public function getMimeType($path) {
 		if($this->isReadable($path)) {
-			return OC_Helper::getMimeType($this->buildPath($path));
+			return \OC_Helper::getMimeType($this->buildPath($path));
 		}else{
 			return false;
 		}
@@ -308,7 +314,7 @@ class OC_Filestorage_Local extends OC_Filestorage_Common {
 				return $this->FS->GetFolder($path)->ShortPath;
 			}
 		}
-		catch (com_exception $e){
+		catch (\com_exception $e){
 
 		}
 

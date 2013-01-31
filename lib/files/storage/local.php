@@ -8,10 +8,14 @@
 
 namespace OC\Files\Storage;
 
+if(\OC_Util::runningOnWindows()) {
+	require_once 'local-win32.php';
+} else {
+
 /**
  * for local filestore, we only have to map the paths
  */
-class Local extends \OC\Files\Storage\Common{
+class Local extends \OC\Files\Storage\Common {
 	protected $datadir;
 	public function __construct($arguments) {
 		$this->datadir=$arguments['datadir'];
@@ -244,4 +248,5 @@ class Local extends \OC\Files\Storage\Common{
 	public function hasUpdated($path, $time) {
 		return $this->filemtime($path)>$time;
 	}
+}
 }
