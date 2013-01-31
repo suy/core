@@ -261,7 +261,23 @@ abstract class Storage extends \PHPUnit_Framework_TestCase {
             $this->assertTrue($storage->filesize($f) > 0, 'unknown file size '.$f);
             $this->assertTrue($storage->file_get_contents($f) !== false, 'cannot get file contents '.$f);
             $this->assertTrue($storage->isReadable($f), 'not readable '.$f);
-            $this->assertTrue($storage->isUpdatable($f), 'not writable '.$f);
+//            $this->assertTrue($storage->isUpdatable($f), 'not writable '.$f);
         }
+
+		// write tests next
+		$tempStorage = new \OC\Files\Storage\Temporary(array());
+		$tempStorage->mkdir('output');
+		foreach($filesInDir as $f) {
+			if ($f === '.' || $f === '..') {
+				continue;
+			}
+			$expectedData = $storage->file_get_contents($f);
+			$output = 'output'.DIRECTORY_SEPARATOR.$f;
+			$tempStorage->file_put_contents($output, $expectedData);
+			$data = $tempStorage->file_get_contents($output);
+
+			$this->assertEquals($expectedData, $data, 'with file: '.$f);
+		}
+
     }
 }
