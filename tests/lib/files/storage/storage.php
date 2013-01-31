@@ -250,14 +250,12 @@ abstract class Storage extends \PHPUnit_Framework_TestCase {
         $this->assertContains('££Ö€ßœĚęĘĞĜΣΥΦΩΫΫ.txt', $filesInDir);
         $this->assertContains('undaçao.doc', $filesInDir);
         $this->assertContains('öäüß.txt', $filesInDir);
-		// it will simply break on chinese chars
-		// $this->assertContains('中文blah中文blah.txt', $filesInDir);
+		$this->assertContains('中文blah中文blah.txt', $filesInDir);
 
-        // some function tests
-        foreach($filesInDir as $f) {
-            if ($f === '.' || $f === '..') {
-                continue;
-            }
+        // some function tests - no file names which are know to work
+		$filesToTest = array('££Ö€ßœĚęĘĞĜΣΥΦΩΫΫ.txt', 'undaçao.doc', 'öäüß.txt');
+
+        foreach($filesToTest as $f) {
             $this->assertTrue($storage->file_exists($f), 'does not exist '.$f);
             $this->assertTrue($storage->filesize($f) > 0, 'unknown file size '.$f);
             $this->assertTrue($storage->file_get_contents($f) !== false, 'cannot get file contents '.$f);
@@ -268,10 +266,7 @@ abstract class Storage extends \PHPUnit_Framework_TestCase {
 		// write tests next
 		$tempStorage = new \OC\Files\Storage\Temporary(array());
 		$tempStorage->mkdir('output');
-		foreach($filesInDir as $f) {
-			if ($f === '.' || $f === '..') {
-				continue;
-			}
+		foreach($filesToTest as $f) {
 			$expectedData = $storage->file_get_contents($f);
 			$output = 'output'.DIRECTORY_SEPARATOR.$f;
 			$tempStorage->file_put_contents($output, $expectedData);
@@ -280,5 +275,29 @@ abstract class Storage extends \PHPUnit_Framework_TestCase {
 			$this->assertEquals($expectedData, $data, 'with file: '.$f);
 		}
 
+		// same with fopen now
+		$tempStorage = new \OC\Files\Storage\Temporary(array());
+		$tempStorage->mkdir('output');
+		foreach($filesToTest as $f) {
+			$output = 'output'.DIRECTORY_SEPARATOR.$f;
+			// open source
+			$source = fopen($f, 'r');
+			$this->assertTrue((bool)$source, 'fopen failed: '.$f);
+
+			// open target
+			$target = fopen($output, 'w');
+			$this->assertTrue((bool)$target, 'fopen failed: '.$f);
+
+			// read / write ops
+			$sourceData = fread($source, PHP_INT_MAX);
+			fwrite($target, $sourceData);
+			fclose($target);
+
+			// compare content
+			$target = fopen($output, 'r');
+			$targetData = fread($target, PHP_INT_MAX);
+
+			$this->assertEquals($sourceData, $targetData, 'with file: '.$f);
+		}
     }
 }
