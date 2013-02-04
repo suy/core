@@ -861,7 +861,8 @@ class View {
 	 * @return array
 	 */
 	public function search($query) {
-		return $this->searchCommon('%' . $query . '%', 'search');
+		$query = ($query == '*') ? '%' : '%' . $query . '%'; // add support for '*' to return all results
+		return $this->searchCommon($query, 'search');
 	}
 
 	/**
