@@ -123,6 +123,11 @@ class OC_DB {
 							'path' => $datadir.'/'.$name.'.db',
 							'driver' => 'pdo_sqlite',
 					);
+					$connectionParams['fixups'] = array(
+						'`' => '"',
+						'NOW()' => 'datetime(\'now\')',
+						'UNIX_TIMESTAMP()' => 'strftime(\'%s\',\'now\')',
+					);
 					break;
 				case 'mysql':
 					$connectionParams = array(
@@ -144,6 +149,10 @@ class OC_DB {
 							'dbname' => $name,
 							'driver' => 'pdo_mysql',
 					);
+					$connectionParams['fixups'] = array(
+						'`' => '"',
+						'UNIX_TIMESTAMP()' => 'cast(extract(epoch from current_timestamp) as integer)',
+					);
 					break;
 				case 'oci':
 					$connectionParams = array(
@@ -154,6 +163,10 @@ class OC_DB {
 							'dbname' => $name,
 							'charset' => 'AL32UTF8',
 							'driver' => 'oci8',
+					);
+					$connectionParams['fixups'] = array(
+						'`' => '"',
+						'NOW()' => 'CURRENT_TIMESTAMP',
 					);
 					break;
 				default:
@@ -188,9 +201,6 @@ class OC_DB {
 	 * SQL query via Doctrine prepare(), needs to be execute()'d!
 	 */
 	static public function prepare( $query, $limit=null, $offset=null ) {
-		// Optimize the query
-		$query = self::processQuery( $query );
-
 		self::connect();
 		// return the result
 		if (self::$backend == self::BACKEND_DOCTRINE) {
@@ -373,39 +383,6 @@ class OC_DB {
 		}
 
 		return $result->execute();
-	}
-
-	/**
-	 * @brief does minor changes to query
-	 * @param string $query Query string
-	 * @return string corrected query string
-	 *
-	 * This function replaces *PREFIX* with the value of $CONFIG_DBTABLEPREFIX
-	 * and replaces the ` with ' or " according to the database driver.
-	 */
-	private static function processQuery( $query ) {
-		self::connect();
-		// We need Database type
-		if(is_null(self::$type)) {
-			self::$type=OC_Config::getValue( "dbtype", "sqlite" );
-		}
-		$type = self::$type;
-
-		// differences in escaping of table names ('`' for mysql) and getting the current timestamp
-		if( $type == 'sqlite' || $type == 'sqlite3' ) {
-			$query = str_replace( '`', '"', $query );
-			$query = str_ireplace( 'NOW()', 'datetime(\'now\')', $query );
-			$query = str_ireplace( 'UNIX_TIMESTAMP()', 'strftime(\'%s\',\'now\')', $query );
-		} elseif( $type == 'pgsql' ) {
-			$query = str_replace( '`', '"', $query );
-			$query = str_ireplace( 'UNIX_TIMESTAMP()', 'cast(extract(epoch from current_timestamp) as integer)',
-				$query );
-		} elseif( $type == 'oci'  ) {
-			$query = str_replace( '`', '"', $query );
-			$query = str_ireplace( 'NOW()', 'CURRENT_TIMESTAMP', $query );
-		}
-
-		return $query;
 	}
 
 	/**
