@@ -42,8 +42,6 @@ class DatabaseException extends Exception {
 class OC_DB {
 	const BACKEND_DOCTRINE=2;
 
-	static private $preparedQueries = array();
-
 	/**
 	 * @var \Doctrine\DBAL\Connection
 	 */
@@ -100,7 +98,6 @@ class OC_DB {
 				return true;
 			}
 		}
-		self::$preparedQueries = array();
 		// The global data we need
 		$name = OC_Config::getValue( "dbname", "owncloud" );
 		$host = OC_Config::getValue( "dbhost", "" );
@@ -209,12 +206,7 @@ class OC_DB {
 			} else {
 				$query.=$limitsql;
 			}
-		} else {
-			if (isset(self::$preparedQueries[$query])) {
-				return self::$preparedQueries[$query];
-			}
 		}
-		$rawQuery = $query;
 
 		// Optimize the query
 		$query = self::processQuery( $query );
@@ -228,9 +220,6 @@ class OC_DB {
 				throw new DatabaseException($e->getMessage(), $query);
 			}
 			$result=new DoctrineStatementWrapper($result);
-		}
-		if (is_null($limit) || $limit == -1) {
-			self::$preparedQueries[$rawQuery] = $result;
 		}
 		return $result;
 	}
@@ -262,7 +251,6 @@ class OC_DB {
 			self::$connection->close();
 			self::$connection=false;
 			self::$DOCTRINE=false;
-			self::$preparedQueries = array();
 		}
 
 		return true;

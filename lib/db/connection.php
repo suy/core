@@ -15,6 +15,8 @@ class Connection extends \Doctrine\DBAL\Connection {
 	protected $table_prefix;
 	protected $sequence_suffix;
 
+	protected $preparedQueries = array();
+
 	/**
 	 * Initializes a new instance of the Connection class.
 	 *
@@ -45,9 +47,24 @@ class Connection extends \Doctrine\DBAL\Connection {
 	 */
 	public function prepare( $statement, $limit=null, $offset=null ) {
 		$statement = $this->replaceTablePrefix($statement);
-		// TODO: limit & offset
-		// TODO: prepared statement cache
-		return parent::prepare($statement);
+		if (!is_null($limit) && $limit != -1) {
+			// TODO: limit & offset
+		} else {
+			if (isset($this->preparedQueries[$statement])) {
+				return $this->preparedQueries[$statement];
+			}
+		}
+		$rawQuery = $statement;
+		$result = parent::prepare($statement);
+		if ($this->_driver instanceof \Doctrine\DBAL\Driver\PDOSqlite\Driver) {
+			// Sqlite doesn't handle query caching and schema changes
+			// TODO: find a better way to handle this
+			return $result;
+		}
+		if (is_null($limit) || $limit == -1) {
+			$this->preparedQueries[$rawQuery] = $result;
+		}
+		return $result;
 	}
 
 	/**
