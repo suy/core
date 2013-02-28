@@ -321,26 +321,38 @@ OC.Share={
 					html += '<label style="display:none;">';
 				} else {
 					html += '<label>';
-				}
+				}			
 				html += '<input type="checkbox" name="edit" class="permissions" '+editChecked+' />'+t('core', 'can edit')+'</label>';
 			}
-			html += '<a href="#" class="showCruds" style="display:none;"><img class="svg" alt="'+t('core', 'access control')+'" src="'+OC.imagePath('core', 'actions/triangle-s')+'"/></a>';
-			html += '<div class="cruds" style="display:none;">';
+			html += '<a href="#" class="showCruds" id="showCruds" style="display:none;"><img class="svg" alt="'+t('core', 'access control')+'" src="'+OC.imagePath('core', 'actions/triangle-s')+'"/></a>';
+			html += '<div class="cruds" id="cruds" style="display:none;">';
+			var crudop = '<select multiple id="crudmultiselect" class="crudmultiselect" style="width:200px;">';
 				if (possiblePermissions & OC.PERMISSION_CREATE) {
-					html += '<label><input type="checkbox" name="create" class="permissions" '+createChecked+' data-permissions="'+OC.PERMISSION_CREATE+'" />'+t('core', 'create')+'</label>';
+					crudop += '<option value="1" id="crud_op">';
+					var cruds = '<input type="checkbox" name="create" class="permissions" '+createChecked+' data-permissions="'+OC.PERMISSION_CREATE+'" />'+t('core', 'create')+'</option>';
 				}
 				if (possiblePermissions & OC.PERMISSION_UPDATE) {
-					html += '<label><input type="checkbox" name="update" class="permissions" '+updateChecked+' data-permissions="'+OC.PERMISSION_UPDATE+'" />'+t('core', 'update')+'</label>';
+					crudop += '<option value="2" id="crud_op">';
+					var cruds = '<input type="checkbox" name="update" class="permissions" '+updateChecked+' data-permissions="'+OC.PERMISSION_UPDATE+'" />'+t('core', 'update')+'</option>';
 				}
 				if (possiblePermissions & OC.PERMISSION_DELETE) {
-					html += '<label><input type="checkbox" name="delete" class="permissions" '+deleteChecked+' data-permissions="'+OC.PERMISSION_DELETE+'" />'+t('core', 'delete')+'</label>';
+					crudop += '<option value="3" id="crud_op">';
+					var cruds = '<input type="checkbox" name="delete" class="permissions" '+deleteChecked+' data-permissions="'+OC.PERMISSION_DELETE+'" />'+t('core', 'delete')+'</option>';
 				}
 				if (possiblePermissions & OC.PERMISSION_SHARE) {
-					html += '<label><input type="checkbox" name="share" class="permissions" '+shareChecked+' data-permissions="'+OC.PERMISSION_SHARE+'" />'+t('core', 'share')+'</label>';
-				}
+					crudop += '<option value="4" id="crud_op">';
+					var cruds = '<input type="checkbox" name="share" class="permissions" '+shareChecked+' data-permissions="'+OC.PERMISSION_SHARE+'" />'+t('core', 'share')+'</option>';
+				}	
+			$(cruds).appendTo('#crud_op');	
+			crudop += '</select>';		
+			$(crudop).appendTo('#cruds'); // Todo : Enable this for all elements, this works for one instance.
 			html += '</div>';
 			html += '</li>';
 			$(html).appendTo('#shareWithList');
+			$('#crudmultiselect').multiselect({ 
+				header: false,
+				selectedList : 4 // For all 4 crud operations.
+			});
 			$('#expiration').show();
 		}
 	},
