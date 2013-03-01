@@ -460,8 +460,9 @@ $(document).ready(function() {
 		// Show permissions and unshare button
 		$(':hidden', this).filter(':not(.cruds)').show();
 	});
-
-	$(document).on('mouseleave', '#dropdown #shareWithList li', function(event) {
+	
+	//This code is hiding the multiselect dropdown. Check.	
+	/*$(document).on('mouseleave', '#dropdown #shareWithList li', function(event) {
 		// Hide permissions and unshare button
 		if (!$('.cruds', this).is(':visible')) {
 			$('a', this).hide();
@@ -472,7 +473,7 @@ $(document).ready(function() {
 		} else {
 			$('a.unshare', this).hide();
 		}
-	});
+	});*/
 
 	$(document).on('click', '#dropdown .showCruds', function() {
 		$(this).parent().find('.cruds').toggle();
