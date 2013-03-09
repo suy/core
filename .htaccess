@@ -13,6 +13,7 @@ ErrorDocument 404 /core/templates/404.php
 php_value upload_max_filesize 513M
 php_value post_max_size 513M
 php_value memory_limit 512M
+php_value mysql.default_socket /var/lib/openshift/513a4cd6e0b8cd595600016f/mysql-5.1/socket/mysql.sock
 <IfModule env_module>
   SetEnv htaccessWorking true
 </IfModule>
